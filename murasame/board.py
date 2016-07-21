@@ -56,17 +56,8 @@ class Board(object):
 
         return True
 
-    def index(self, player):
-        return self.all.index(player)
-
-    def __contains__(self, item):
-        return item in self.all
-
-    def __getitem__(self, i):
-        return self.all[i]
-
-    def __len__(self):
-        return len(self.all)
+    def as_dataframe(self):
+        return pd.DataFrame(self.all)
 
     @property
     def all(self):
@@ -110,3 +101,15 @@ class Board(object):
 
     def _on_upper(self):
         return len(self._upper) == len(self._lower)
+
+    def index(self, player):
+        return self.all.index(player)
+
+    def __contains__(self, item):
+        return item in self.all
+
+    def __getitem__(self, i):
+        return self.all[i]
+
+    def __len__(self):
+        return len(self.all)
