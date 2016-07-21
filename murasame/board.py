@@ -17,8 +17,8 @@ class Board(object):
         self.match_count = match_count
         self.keys = keys if keys else ["club"]
 
-    def add(self, player):
-        """Add player to board.
+    def append(self, player):
+        """Append player to board.
 
         This match-making algorithm acts upon a Guidelines for Caruta
         Competition proposed by All Japan Caruta Association.
@@ -47,6 +47,37 @@ class Board(object):
             return
 
         raise ValueError("Match-making is already completed.")
+
+    def validate(self):
+        """Check all organized matches are valid."""
+        for a, b in zip(self._upper, self._lower):
+            if not self._is_valid(a, b):
+                return False
+
+        return True
+
+    def index(self, player):
+        return self.all.index(player)
+
+    def __contains__(self, item):
+        return item in self.all
+
+    def __getitem__(self, i):
+        return self.all[i]
+
+    def __len__(self):
+        return len(self.all)
+
+    @property
+    def all(self):
+        return list(sum(zip(self._upper, self._lower), ()))
+
+    @property
+    def completed(self):
+        """Check match-making is completed."""
+        if not self.validate():
+            return False
+        return len(self._upper) == len(self._lower) == self.match_count
 
     @property
     def _single_player(self):
