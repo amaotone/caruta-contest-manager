@@ -56,8 +56,23 @@ class Board(object):
 
         return True
 
-    def as_dataframe(self):
-        return pd.DataFrame(self.all)
+    def as_dataframe(self, reset_index=False, drop_id=False, start_index=0,
+                     trim=False):
+        if trim:
+            reset_index = True
+            drop_id = True
+            start_index = 1
+
+        res = pd.DataFrame(self.all)
+        if reset_index:
+            res.reset_index(drop=drop_id, inplace=True)
+            res.index += start_index
+
+        return res
+
+    def to_excel(self, path="board.xlsx"):
+        res = self.as_dataframe(trim=True)
+        res.to_excel(path)
 
     @property
     def all(self):
@@ -77,7 +92,7 @@ class Board(object):
 
     def _change_players(self, player):
         opponent = self._single_player
-        for i, a, b in enumerate(zip(self._upper, self._lower)):
+        for i, (a, b) in enumerate(zip(self._upper, self._lower)):
             if self._is_valid(player, b) and self._is_valid(opponent, a):
                 self._upper[i] = player
                 self._lower.append(a)
