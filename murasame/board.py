@@ -1,3 +1,5 @@
+import warnings
+
 import pandas as pd
 
 
@@ -30,6 +32,8 @@ class Board(object):
             http://www.karuta.or.jp/kitei/kyougikai.pdf
 
         """
+        assert len(self._upper) >= len(self._lower)
+
         if self._on_upper():
             self._upper.append(player)
             return
@@ -46,7 +50,7 @@ class Board(object):
             self._change_players(player)
             return
 
-        raise ValueError("Match-making is already completed.")
+        warnings.warn("Match-making is already completed.")
 
     def validate(self):
         """Check all organized matches are valid."""
@@ -103,7 +107,8 @@ class Board(object):
                 self._lower.append(b)
                 return
 
-        raise ValueError("There is no changeable player.")
+        warnings.warn("No player is changeable.")
+        self._lower.append(player)
 
     def _is_valid(self, a, b):
         for key in self.keys:
