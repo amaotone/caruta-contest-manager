@@ -26,7 +26,7 @@ class Board(object):
         Competition proposed by All Japan Caruta Association.
 
         Args:
-            player (pd.Series): Player to be added.
+            player (pd.Series): A player to be added.
 
         See Also:
             http://www.karuta.or.jp/kitei/kyougikai.pdf
@@ -60,23 +60,8 @@ class Board(object):
 
         return True
 
-    def as_dataframe(self, reset_index=False, drop_id=False, start_index=0,
-                     trim=False):
-        if trim:
-            reset_index = True
-            drop_id = True
-            start_index = 1
-
-        res = pd.DataFrame(self.all)
-        if reset_index:
-            res.reset_index(drop=drop_id, inplace=True)
-            res.index += start_index
-
-        return res
-
-    def to_excel(self, path="board.xlsx"):
-        res = self.as_dataframe(trim=True)
-        res.to_excel(path)
+    def as_dataframe(self):
+        return pd.DataFrame(self.all)
 
     @property
     def all(self):

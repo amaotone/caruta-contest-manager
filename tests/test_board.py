@@ -24,5 +24,30 @@ def pytest_funcarg__board(request):
      pd.Series({"club": "b", "region": "west"}),
      False),
 ])
-def test_valid_match(board, a, b, expected):
+def test_valid_match(a, b, expected):
+    board = Board(match_count=2, keys=["club", "region"])
     assert board._is_valid(a, b) is expected
+
+
+@pytest.mark.parametrize(("data"), [
+    [pd.Series({"club": "a"}),
+     pd.Series({"club": "a"}),
+     pd.Series({"club": "a"})]
+])
+def test_same_club_in_a_row(data):
+    board = Board(match_count=10)
+    for d in data:
+        board.append(d)
+    assert len(board._upper) == 3
+
+
+@pytest.mark.parametrize(("data"), [
+    [pd.Series({"club": "a", "name": "a"}),
+     pd.Series({"club": "a", "name": "b"}),
+     pd.Series({"club": "a", "name": "c"}),
+     pd.Series({"club": "a", "name": "d"})]
+])
+def test_unavoidable_same_club(data):
+    board = Board(match_count=2)
+    for d in data:
+        board.append(d)
