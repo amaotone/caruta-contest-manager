@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 
 from . import CONFIG
@@ -19,7 +21,7 @@ def append_region(df):
 
 
 def select_column(df):
-    cols = CONFIG["formatter"]["use"]
+    cols = CONFIG["formatter"]["select"]
     res = df.ix[:, cols]
     return res
 
@@ -39,7 +41,34 @@ def formatter(df):
     if conf["trim"]:
         res = trim_space(res)
     if conf["region"]:
+        res = standardize_prefecture(res)
         res = append_region(res)
-    if conf["use"]:
+    if conf["select"]:
         res = select_column(res)
     return res
+
+
+def divider(df):
+    conf = CONFIG["divider"]
+    out = conf["out"]
+    os.makedirs(out, exist_ok=True)
+
+    files = conf["files"]
+    writers = {}
+    for filename in files.keys():
+        path = os.path.join(out, "{}.xlsx".format(filename))
+        writers[filename] = pd.ExcelWriter(path)
+
+    for group, member in df.groupby(conf["ref"]):
+        member = member.drop(conf["ref"], axis=1)
+        for filename, groups in files.items():
+            if group in groups:
+                target = writers[filename]
+                break
+        else:
+            raise RuntimeError
+
+        member.to_excel(target, group, index=False)
+
+    for w in writers.values():
+        w.save()
