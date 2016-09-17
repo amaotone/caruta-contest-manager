@@ -57,7 +57,7 @@ def divider(df):
     files = conf["files"]
     writers = {}
     for filename in files.keys():
-        path = os.path.join(out, "{}.xlsx".format(filename))
+        path = os.path.join(out, filename)
         writers[filename] = pd.ExcelWriter(path)
 
     # divide groups among xlsxwriters
