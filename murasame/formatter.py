@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 
 
@@ -27,7 +25,7 @@ def formatter(df):
     from . import CONFIG
     conf = CONFIG["formatter"]
     routine = CONFIG["formatter"]["routine"]
-    
+
     fmt = Formatter(df)
     if routine["trim"]:
         fmt.trim_space(conf["trim"])
@@ -40,30 +38,3 @@ def formatter(df):
         fmt.select_column(conf["select"])
 
     return fmt.data
-
-
-def divider(df):
-    conf = CONFIG["divider"]
-    out = conf["out"]
-    os.makedirs(out, exist_ok=True)
-
-    # make xlsxwriter
-    files = conf["files"]
-    writers = {}
-    for filename in files.keys():
-        path = os.path.join(out, filename)
-        writers[filename] = pd.ExcelWriter(path)
-
-    # divide groups among xlsxwriters
-    for group, member in df.groupby(conf["ref"]):
-        member = member.drop(conf["ref"], axis=1)
-        for filename, groups in files.items():
-            if group in groups:
-                target = writers[filename]
-                break
-        else:
-            raise RuntimeError
-        member.to_excel(target, group, index=False)
-
-    for w in writers.values():
-        w.save()
