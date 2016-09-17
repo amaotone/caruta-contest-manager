@@ -2,50 +2,44 @@ import os
 
 import pandas as pd
 
-from . import CONFIG
-
-conf = CONFIG["formatter"]
-
 
 class Formatter(object):
     def __init__(self, df):
         self.data = df
 
-    def trim_space(self):
-        cols = conf["trim"]
+    def trim_space(self, cols):
         for col in cols:
             self.data[col] = self.data[col].str.replace("[\s　]", "")
 
-    def standardize_prefecture(self):
-        ref = conf["region"]["ref"]
-        self.data[ref] = self.data[ref].str.replace("[府県]", "")
-        self.data[ref] = self.data[ref].str.replace("東京都", "東京")
+    def standardize_prefecture(self, col):
+        self.data[col] = self.data[col].str.replace("[府県]", "")
+        self.data[col] = self.data[col].str.replace("東京都", "東京")
 
-    def append_region(self):
-        file = conf["region"]["file"]
-        ref = conf["region"]["ref"]
-        region = pd.read_excel(file)
-        self.data = self.data.merge(region, how="left", on=ref)
+    def append_region(self, pref_col, region_file):
+        region = pd.read_excel(region_file)
+        self.data = self.data.merge(region, how="left", on=pref_col)
 
-    def select_column(self):
-        cols = conf["select"]
+    def select_column(self, cols):
         self.data = self.data.ix[:, cols]
-
-    def __call__(self):
-        routine = conf["routine"]
-        if routine["trim"]:
-            self.trim_space()
-        if routine["region"]:
-            self.standardize_prefecture()
-            self.append_region()
-        if routine["select"]:
-            self.select_column()
-        return self.data
 
 
 def formatter(df):
+    from . import CONFIG
+    conf = CONFIG["formatter"]
+    routine = CONFIG["formatter"]["routine"]
+    
     fmt = Formatter(df)
-    return fmt()
+    if routine["trim"]:
+        fmt.trim_space(conf["trim"])
+    if routine["region"]:
+        base = conf["region"]["base"]
+        file = conf["region"]["file"]
+        fmt.standardize_prefecture(base)
+        fmt.append_region(base, file)
+    if routine["select"]:
+        fmt.select_column(conf["select"])
+
+    return fmt.data
 
 
 def divider(df):
