@@ -1,5 +1,10 @@
 import pandas as pd
 
+from . import CONFIG
+
+conf = CONFIG["formatter"]
+routine = CONFIG["formatter"]["routine"]
+
 
 class Formatter(object):
     def __init__(self, df):
@@ -22,10 +27,6 @@ class Formatter(object):
 
 
 def formatter(df):
-    from . import CONFIG
-    conf = CONFIG["formatter"]
-    routine = CONFIG["formatter"]["routine"]
-
     fmt = Formatter(df)
     if routine["trim"]:
         fmt.trim_space(conf["trim"])
