@@ -10,9 +10,10 @@ class Formatter(object):
     def __init__(self, df):
         self.data = df
 
-    def trim_space(self, cols):
-        for col in cols:
-            self.data[col] = self.data[col].str.replace("[\s　]", "")
+    def trim_space(self):
+        for col, type_ in self.data.dtypes.iteritems():
+            if type_ == "object":
+                self.data[col] = self.data[col].str.replace("[\s　]", "")
 
     def standardize_prefecture(self, col):
         self.data[col] = self.data[col].str.replace("[府県]", "")
@@ -29,7 +30,7 @@ class Formatter(object):
 def formatter(df):
     fmt = Formatter(df)
     if routine["trim"]:
-        fmt.trim_space(conf["trim"])
+        fmt.trim_space()
     if routine["region"]:
         base = conf["region"]["base"]
         file = conf["region"]["file"]
