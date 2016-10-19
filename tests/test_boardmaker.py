@@ -1,9 +1,23 @@
 import pandas as pd
 import pytest
 
-from murasame.board import Board
+from boardmaker import Board
+from boardmaker import match_count
 
 nan = float("nan")
+
+
+@pytest.mark.parametrize(('player', 'match'), [
+    (128, 64),
+    (127, 63),
+    (100, 36),
+    (65, 1),
+    (64, 32),
+    (3, 1),
+    (2, 1),
+])
+def test_match_count(player, match):
+    assert match_count(player) == match
 
 
 def pytest_funcarg__board(request):
