@@ -10,7 +10,7 @@ class Divider(object):
         self.data = df
         self.files = files
         self.base = base
-        self.writers = {}
+        self.writers = dict()
 
     def _setup_writer(self, outdir):
         assert self.files
