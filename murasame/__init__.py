@@ -1,8 +1,6 @@
 import yaml
 
-def load_config(file="config.yaml"):
+def load_setting(file="setting.yml"):
     with open(file, "r") as f:
-        conf = yaml.load(f)
-    return conf
-
-CONFIG = load_config()
+        setting = yaml.load(f)
+    return setting

@@ -2,9 +2,7 @@ import os
 
 import pandas as pd
 
-from . import CONFIG
-
-conf = CONFIG["divider"]
+from . import load_setting
 
 
 class Divider(object):
@@ -20,7 +18,7 @@ class Divider(object):
 
         for name in self.files.keys():
             path = os.path.join(outdir, name)
-            self.writers[name] = pd.ExcelWriter(path)
+            self.writers[name] = pd.ExcelWriter(path, engine='xlsxwriter')
 
     def save(self, outdir):
         self._setup_writer(outdir)
@@ -41,5 +39,6 @@ class Divider(object):
 
 
 def divider(df):
-    div = Divider(df, conf["files"], conf["base"])
-    div.save(conf["out"])
+    setting = load_setting()['divider']
+    div = Divider(df, setting["file"], setting["base"])
+    div.save(load_setting()['system']['divided'])
