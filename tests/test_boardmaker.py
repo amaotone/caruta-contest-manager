@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from boardmaker import Board
-from boardmaker import match_count
+from maker import Board
+from maker import match_count
 
 nan = float("nan")
 

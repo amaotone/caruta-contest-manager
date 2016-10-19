@@ -1,4 +1,5 @@
 import math
+import os
 import warnings
 
 import numpy as np
@@ -120,24 +121,55 @@ class Board(object):
         return len(self.all)
 
 
-class BoardMaker(object):
-    def __init__(self, file, keys):
+class Maker(object):
+    def __init__(self, file):
         self.dfs = pd.read_excel(file, sheetname=None)
-        self.boards = None
-        self.keys = keys
+        self.results = None
 
-    def make(self):
-        boards = list()
+    def make(self, keys, id_label='ID', seat_label='seat', bye_display='bye'):
+        results = list()
 
         start = 1
         for classname, df in classname_sorted(self.dfs.items()):
             assert start % 2 == 1
-            board = self._make_board(df, keys=self.keys)
+
+            board = self._make_board(df, keys=keys)
             board = self._trim_board(board, start_index=start)
-            boards.append(board)
+
+            sheet = self._make_sheet(df, board, on=id_label, label=seat_label,
+                                     bye_display=bye_display)
+
+            results.append({
+                'classname': classname,
+                'board': board,
+                'sheet': sheet
+            })
+
             start += board.shape[0]
 
-        self.boards = boards
+        self.results = results
+
+    def save(self, outdir='result', board_file='board.xlsx',
+             sheet_file='sheet.xlsx'):
+        os.makedirs(outdir, exist_ok=True)
+        board_writer = pd.ExcelWriter(os.path.join(outdir, board_file),
+                                      engine='xlsxwriter')
+        sheet_writer = pd.ExcelWriter(os.path.join(outdir, sheet_file),
+                                      engine='xlsxwriter')
+
+        for res in self.results:
+            res['board'].to_excel(board_writer, res['classname'], index=False)
+            res['sheet'].to_excel(sheet_writer, res['classname'], index=False)
+
+        board_writer.save()
+        sheet_writer.save()
+
+    @staticmethod
+    def _make_sheet(df, board, on, label, bye_display):
+        ref = pd.DataFrame({label: board.index, on: board[on]})
+        sheet = df.merge(right=ref, on=on, how='left')
+        sheet[label] = sheet[label].fillna(bye_display)
+        return sheet
 
     @staticmethod
     def _make_board(df, keys):
@@ -166,11 +198,3 @@ def classname_sorted(items):
 def match_count(player_count):
     winner_count = 2 ** (math.ceil(math.log(player_count, 2)) - 1)
     return player_count - winner_count
-
-
-def append_seat_number(df, board, id_label="index", label="seat", fill="bye",
-                       start_index=1):
-    ref = pd.DataFrame({label: board.index}, index=board[id_label])
-    res = df.merge(right=ref, left_index=True, right_index=True, how="left")
-    res[label] = res[label].fillna(fill)
-    return res
