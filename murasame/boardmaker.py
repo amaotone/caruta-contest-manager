@@ -1,5 +1,7 @@
+import math
 import warnings
 
+import numpy as np
 import pandas as pd
 
 
@@ -57,7 +59,6 @@ class Board(object):
         for a, b in zip(self._upper, self._lower):
             if not self._is_valid(a, b):
                 return False
-
         return True
 
     def as_dataframe(self):
@@ -69,7 +70,6 @@ class Board(object):
 
     @property
     def completed(self):
-        """Check match-making is completed."""
         if not self.validate():
             return False
         return len(self._upper) == len(self._lower) == self.match_count
@@ -118,3 +118,59 @@ class Board(object):
 
     def __len__(self):
         return len(self.all)
+
+
+class BoardMaker(object):
+    def __init__(self, file, keys):
+        self.dfs = pd.read_excel(file, sheetname=None)
+        self.boards = None
+        self.keys = keys
+
+    def make(self):
+        boards = list()
+
+        start = 1
+        for classname, df in classname_sorted(self.dfs.items()):
+            assert start % 2 == 1
+            board = self._make_board(df, keys=self.keys)
+            board = self._trim_board(board, start_index=start)
+            boards.append(board)
+            start += board.shape[0]
+
+        self.boards = boards
+
+    @staticmethod
+    def _make_board(df, keys):
+        player_count = df.shape[0]
+        board = Board(match_count(player_count), keys=keys)
+
+        shuffled = df.reindex(np.random.permutation(df.index))
+        for i, row in shuffled.iterrows():
+            board.append(row)
+            if board.completed:
+                break
+
+        return board.as_dataframe()
+
+    @staticmethod
+    def _trim_board(df, start_index=1):
+        df.reset_index(drop=True, inplace=True)
+        df.index += start_index
+        return df
+
+
+def classname_sorted(items):
+    return sorted(items, key=lambda x: (x[0][0], int(x[0][1:])))
+
+
+def match_count(player_count):
+    winner_count = 2 ** (math.ceil(math.log(player_count, 2)) - 1)
+    return player_count - winner_count
+
+
+def append_seat_number(df, board, id_label="index", label="seat", fill="bye",
+                       start_index=1):
+    ref = pd.DataFrame({label: board.index}, index=board[id_label])
+    res = df.merge(right=ref, left_index=True, right_index=True, how="left")
+    res[label] = res[label].fillna(fill)
+    return res
