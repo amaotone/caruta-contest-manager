@@ -1,9 +1,6 @@
 import pandas as pd
 
-from . import CONFIG
-
-conf = CONFIG["formatter"]
-routine = CONFIG["formatter"]["routine"]
+from . import load_setting
 
 
 class Formatter(object):
@@ -15,7 +12,7 @@ class Formatter(object):
             if type_ == "object":
                 self.data[col] = self.data[col].str.replace("[\s　]", "")
 
-    def standardize_prefecture(self, col):
+    def trim_prefecture(self, col):
         self.data[col] = self.data[col].str.replace("[府県]", "")
         self.data[col] = self.data[col].str.replace("東京都", "東京")
 
@@ -28,15 +25,17 @@ class Formatter(object):
 
 
 def formatter(df):
+    setting = load_setting()['formatter']
     fmt = Formatter(df)
-    if routine["trim"]:
-        fmt.trim_space()
-    if routine["region"]:
-        base = conf["region"]["base"]
-        file = conf["region"]["file"]
-        fmt.standardize_prefecture(base)
+
+    fmt.trim_space()
+
+    if setting['region']['use']:
+        base = setting['region']['base']
+        file = setting['region']['file']
+        fmt.trim_prefecture(base)
         fmt.append_region(base, file)
-    if routine["select"]:
-        fmt.select_column(conf["select"])
+
+    fmt.select_column(setting['column'])
 
     return fmt.data
