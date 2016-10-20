@@ -16,8 +16,8 @@ class Board(object):
                 Default value is `["club"]`.
 
         """
-        self._upper = []
-        self._lower = []
+        self._upper = list()
+        self._lower = list()
 
         self.match_count = match_count
         self.keys = keys if keys else ["club"]
