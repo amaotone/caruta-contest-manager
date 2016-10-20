@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from . import load_setting
+from .utils import load_setting
 
 
 class Divider(object):
@@ -10,7 +10,7 @@ class Divider(object):
         self.data = df
         self.files = files
         self.base = base
-        self.writers = {}
+        self.writers = dict()
 
     def _setup_writer(self, outdir):
         assert self.files
@@ -41,4 +41,4 @@ class Divider(object):
 def divider(df):
     setting = load_setting()['divider']
     div = Divider(df, setting["file"], setting["base"])
-    div.save(load_setting()['system']['divided'])
+    div.save(load_setting()['system']['tmpdir'])
