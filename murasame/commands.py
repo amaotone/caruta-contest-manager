@@ -55,6 +55,7 @@ def maker():
         maker.save_sheet(os.path.join(resdir, sheetname),
                          sort_by=setting['sheet']['sort_by'])
 
+
 if __name__ == '__main__':
     formatter()
     divider()
