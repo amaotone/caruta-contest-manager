@@ -1,9 +1,10 @@
-import math
 import os
 import warnings
 
 import numpy as np
 import pandas as pd
+
+from .utils import classname_sorted, match_count
 
 
 class Board(object):
@@ -124,77 +125,69 @@ class Board(object):
 class Maker(object):
     def __init__(self, file):
         self.dfs = pd.read_excel(file, sheetname=None)
-        self.results = None
+        self.results = dict()
 
-    def make(self, keys, id_label='ID', seat_label='seat', bye_display='bye'):
-        results = list()
+    def make_board(self, keys):
+        def make(df, keys):
+            player_count = df.shape[0]
+            board = Board(match_count(player_count), keys=keys)
+
+            shuffled = df.reindex(np.random.permutation(df.index))
+            for i, row in shuffled.iterrows():
+                board.append(row)
+                if board.completed:
+                    break
+            return board.as_dataframe()
+
+        def trim(df, start_index=1):
+            df.reset_index(drop=True, inplace=True)
+            df.index += start_index
+            return df
 
         start = 1
         for classname, df in classname_sorted(self.dfs.items()):
             assert start % 2 == 1
 
-            board = self._make_board(df, keys=keys)
-            board = self._trim_board(board, start_index=start)
+            board = make(df, keys=keys)
+            board = trim(board, start_index=start)
 
-            sheet = self._make_sheet(df, board, on=id_label, label=seat_label,
-                                     bye_display=bye_display)
-
-            results.append({
-                'classname': classname,
-                'board': board,
-                'sheet': sheet
-            })
-
+            self.results[classname] = dict()
+            self.results[classname]['board'] = board
             start += board.shape[0]
 
-        self.results = results
+    def make_sheet(self, id_label, seat_label, fill):
+        def make(df, board, id_label, seat_label, fill):
+            ref = pd.DataFrame({id_label: board[id_label], seat_label:
+                board.index})
+            sheet = df.merge(right=ref, on=id_label, how='left')
+            sheet[seat_label] = sheet[seat_label].fillna(fill)
+            return sheet
 
-    def save(self, outdir='result', board_file='board.xlsx',
-             sheet_file='sheet.xlsx'):
-        os.makedirs(outdir, exist_ok=True)
-        board_writer = pd.ExcelWriter(os.path.join(outdir, board_file),
-                                      engine='xlsxwriter')
-        sheet_writer = pd.ExcelWriter(os.path.join(outdir, sheet_file),
-                                      engine='xlsxwriter')
+        assert len(self.results) != 0
+        for classname, df in classname_sorted(self.dfs.items()):
+            board = self.results[classname]['board']
+            sheet = make(df, board, id_label, seat_label, fill)
+            self.results[classname]['sheet'] = sheet
 
-        for res in self.results:
-            res['board'].to_excel(board_writer, res['classname'], index=False)
-            res['sheet'].to_excel(sheet_writer, res['classname'], index=False)
+    def save_board(self, path):
+        w = self.writer(path)
+        for classname, res in self.results.items():
+            res['board'].to_excel(w, classname, index=False)
 
-        board_writer.save()
-        sheet_writer.save()
+        w.save()
 
-    @staticmethod
-    def _make_sheet(df, board, on, label, bye_display):
-        ref = pd.DataFrame({label: board.index, on: board[on]})
-        sheet = df.merge(right=ref, on=on, how='left')
-        sheet[label] = sheet[label].fillna(bye_display)
-        return sheet
+    def save_sheet(self, path, sort_by=None):
+        w = self.writer(path)
+        for classname, res in self.results.items():
+            sheet = res['sheet'].copy()
+            if sort_by is not None:
+                sheet.sort_values(by=sort_by, inplace=True)
+            sheet.to_excel(w, classname, index=False)
 
-    @staticmethod
-    def _make_board(df, keys):
-        player_count = df.shape[0]
-        board = Board(match_count(player_count), keys=keys)
-
-        shuffled = df.reindex(np.random.permutation(df.index))
-        for i, row in shuffled.iterrows():
-            board.append(row)
-            if board.completed:
-                break
-
-        return board.as_dataframe()
+        w.save()
 
     @staticmethod
-    def _trim_board(df, start_index=1):
-        df.reset_index(drop=True, inplace=True)
-        df.index += start_index
-        return df
-
-
-def classname_sorted(items):
-    return sorted(items, key=lambda x: (x[0][0], int(x[0][1:])))
-
-
-def match_count(player_count):
-    winner_count = 2 ** (math.ceil(math.log(player_count, 2)) - 1)
-    return player_count - winner_count
+    def writer(path):
+        root, _ = os.path.split(path)
+        os.makedirs(root, exist_ok=True)
+        return pd.ExcelWriter(path, engine='xlsxwriter')
