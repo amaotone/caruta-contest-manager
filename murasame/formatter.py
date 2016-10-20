@@ -1,6 +1,8 @@
+import os
+
 import pandas as pd
 
-from . import load_setting
+from .utils import load_setting
 
 
 class Formatter(object):
@@ -23,6 +25,11 @@ class Formatter(object):
     def select_column(self, cols):
         self.data = self.data.ix[:, cols]
 
+    def save(self, outdir):
+        os.makedirs(outdir, exist_ok=True)
+        w = pd.ExcelWriter(os.path.join(outdir, 'sheet.xlsx'), engine='xlsxwriter')
+        self.data.to_excel(w, index=False)
+        w.save()
 
 def formatter(df):
     setting = load_setting()['formatter']

@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from maker import Board
-from maker import match_count
+from utils import match_count
 
 nan = float("nan")
 
