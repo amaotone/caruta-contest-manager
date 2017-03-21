@@ -1,10 +1,12 @@
 import math
+import os
+import sys
 
 import yaml
 
-
-def load_setting(file="setting.yml"):
-    with open(file, "r") as f:
+def load_setting(name="setting.yml"):
+    path = os.path.join(os.path.dirname(sys.argv[0]), name)
+    with open(path, "r") as f:
         setting = yaml.load(f)
     return setting
 

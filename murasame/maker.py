@@ -171,14 +171,14 @@ class Maker(object):
 
     def save_board(self, path):
         w = self.writer(path)
-        for classname, res in self.results.items():
+        for classname, res in classname_sorted(self.results.items()):
             res['board'].to_excel(w, classname, index=False)
 
         w.save()
 
     def save_sheet(self, path, sort_by=None):
         w = self.writer(path)
-        for classname, res in self.results.items():
+        for classname, res in classname_sorted(self.results.items()):
             sheet = res['sheet'].copy()
             if sort_by is not None:
                 sheet.sort_values(by=sort_by, inplace=True)
