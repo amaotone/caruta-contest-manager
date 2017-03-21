@@ -1,12 +1,13 @@
 import glob
 import os
+import sys
 
 import pandas as pd
 
-from .divider import Divider
-from .formatter import Formatter
-from .maker import Maker
-from .utils import load_setting
+from murasame.divider import Divider
+from murasame.formatter import Formatter
+from murasame.maker import Maker
+from murasame.utils import load_setting
 
 tmpdir = load_setting()['system']['tmpdir']
 resdir = load_setting()['system']['resdir']
@@ -14,10 +15,10 @@ resdir = load_setting()['system']['resdir']
 
 def formatter():
     setting = load_setting()['formatter']
-
+    
     dfs = pd.read_excel(setting['input'], sheetname=None)
     df = pd.concat(list(dfs.values()))
-
+    
     fmt = Formatter(df)
     fmt.trim_space()
     if setting['region']['use']:
@@ -38,17 +39,17 @@ def divider():
 
 def maker():
     setting = load_setting()['maker']
-
+    
     files = glob.glob(os.path.join(tmpdir, 'divider', '*.xlsx'))
     for f in files:
         root, base = os.path.split(f)
         name, ext = os.path.splitext(base)
-
+        
         maker = Maker(file=f)
         maker.make_board(keys=setting['board']['keys'])
         maker.make_sheet(id_label=setting['sheet']['id'], seat_label='座席',
                          fill='不戦')
-
+        
         boardname = '{}_board.xlsx'.format(name)
         sheetname = '{}_sheet.xlsx'.format(name)
         maker.save_board(os.path.join(resdir, boardname))
@@ -57,6 +58,7 @@ def maker():
 
 
 if __name__ == '__main__':
+    os.chdir(os.path.dirname(sys.argv[0]))
     formatter()
     divider()
     maker()
